@@ -101,8 +101,8 @@ int main(int argc, char* argv[]) {
     std::string threads = std::to_string(DefaultThreads);
     std::pair<std::string*, std::string> supported_options[] = {
         {&compiler_path, "--compiler-path="},
+        {&threads, "--threads="},
     };
-
 
     // Parse command line options
     for (int i = 1; i < argc; i++) {
