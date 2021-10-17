@@ -37,3 +37,5 @@ build/
 # Editor environment
 .vscode/
 
+# Snippets, used for testing
+snippets/
