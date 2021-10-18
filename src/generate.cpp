@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <deque>
+#include <map>
 
 #include "split.h"
 
@@ -11,6 +12,7 @@ const std::string SnippetEnd = "/*snippet-end*/";
 const std::string SnippetArg = "SNIPPET_ARG";
 const std::string DefaultTarget = "vscode";
 const int DefaultTabWidth = 4;
+const int DefaultCppStandard = 11;
 
 #ifdef _WIN32
 const char PathSeparator = '\\';
@@ -363,13 +365,41 @@ void enforce_tab_width(Snippet& snip, int tab_width) {
     }
 }
 
+void filter_snippets(std::vector<Snippet>& snips, const std::string& cpp_standard) {
+    int std = stoi(cpp_standard);
+    std::map<std::string, std::vector<Snippet>> groups;
+    for (auto& snip : snips) {
+        groups[snip.shortcut()].push_back(snip);
+    }
+
+    snips.clear();
+
+    for (auto& [shortcut, group] : groups) {
+        sort(group.begin(), group.end(), [&](auto& u, auto& v) {
+            return u.standard() < v.standard();
+        });
+
+        // Pick the highest version that's compliant with the standard
+        // If there are none, pick the first one.
+        size_t i = 0;
+        while (i + 1 < group.size() && group[i + 1].standard() <= std) {
+            i++;
+        }
+
+        snips.push_back(group[i]);
+    }
+}
+
 int main(int argc, char* argv[]) {
     std::string target = DefaultTarget;
     std::string tab_width = std::to_string(DefaultTabWidth);
+    std::string cpp_standard = std::to_string(DefaultCppStandard);
+
     std::vector<std::string> input_files;
     std::pair<std::string*, std::string> supported_options[] = {
         {&target, "--target="},
         {&tab_width, "--tab-width="},
+        {&cpp_standard, "--cpp-standard="},
     };
 
     // Parse command line options
@@ -397,6 +427,8 @@ int main(int argc, char* argv[]) {
     for (auto& snip : snippets) {
         enforce_tab_width(snip, stoi(tab_width));
     }
+
+    filter_snippets(snippets, cpp_standard);
 
     if (target == "vscode") {
         std::cout << export_vscode(snippets);
