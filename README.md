@@ -6,7 +6,7 @@ CMake and a C++ compiler supporting at least C++17 are required to compile this 
 ## Generate utility
 
 ### Example usage
-`./generate ``find snippets/ -name "*.cpp"`` --cpp-standard=20 > vscode-cpp20.code-snippets`
+``./generate `find snippets/ -name "*.cpp"` --cpp-standard=20 > vscode-cpp20.code-snippets``
 
 ### Options
 + `--cpp-standard=N` sets the target C++ language standard. If there are multiple snippets with the same shortcut, choose the one with the highest language standard that doesn't exceed N. If there are no snippets with some shortcut that satisfy the standard (for example, the target is 11, and you only have snippets with 14 and 17), picks the lowest one.
