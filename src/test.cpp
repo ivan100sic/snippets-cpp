@@ -167,4 +167,5 @@ int main(int argc, char* argv[]) {
     executor.wait();
     system("rm -rf tmp");
     std::cout << "Finished with " << warnings << " warnings and " << errors << " errors.\n";
+    return (warnings + errors) > 0;
 }
