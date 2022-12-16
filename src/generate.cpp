@@ -4,6 +4,7 @@
 #include <iostream>
 #include <deque>
 #include <map>
+#include <filesystem>
 
 #include "split.h"
 
@@ -394,29 +395,36 @@ int main(int argc, char* argv[]) {
     std::string target = DefaultTarget;
     std::string tab_width = std::to_string(DefaultTabWidth);
     std::string cpp_standard = std::to_string(DefaultCppStandard);
+    std::string sources_folder;
 
     std::vector<std::string> input_files;
     std::pair<std::string*, std::string> supported_options[] = {
         {&target, "--target="},
         {&tab_width, "--tab-width="},
         {&cpp_standard, "--cpp-standard="},
+        {&sources_folder, "--sources_folder="},
     };
 
     // Parse command line options
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        bool is_option = false;
         for (auto& option : supported_options) {
             if (arg.find(option.second) == 0) {
                 *option.first = arg.substr(option.second.size());
-                is_option = true;
             }
         }
+    }
 
-        if (!is_option) {
-            // Then it is a file
-            input_files.push_back(arg);
+    // Just testing for now.
+    if (!sources_folder.empty()) {
+        for (const auto& file : std::filesystem::recursive_directory_iterator(sources_folder)) {
+            if (file.is_regular_file() && file.path().extension() == ".cpp") {
+                input_files.push_back(file.path());
+            }
         }
+    } else {
+        std::cout << "Error, no sources_folder specified.\n";
+        return 1;
     }
 
     std::vector<Snippet> snippets;

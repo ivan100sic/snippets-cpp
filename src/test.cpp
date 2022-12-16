@@ -9,6 +9,7 @@
 #include <functional>
 #include <condition_variable>
 #include <atomic>
+#include <filesystem>
 
 #include "split.h"
 
@@ -94,30 +95,33 @@ std::string make_cmd(const std::string& compiler_path,
     return cmd;
 }
 
+std::mutex cout_mutex;
+
 int main(int argc, char* argv[]) {
-    std::vector<std::string> input_files;
 
     std::string compiler_path = DefaultCompilerPath;
     std::string threads = std::to_string(DefaultThreads);
+    std::string sources_folder;
     std::pair<std::string*, std::string> supported_options[] = {
         {&compiler_path, "--compiler-path="},
         {&threads, "--threads="},
+        {&sources_folder, "--sources_folder="},
     };
 
     // Parse command line options
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        bool is_option = false;
         for (auto& option : supported_options) {
             if (arg.find(option.second) == 0) {
                 *option.first = arg.substr(option.second.size());
-                is_option = true;
             }
         }
+    }
 
-        if (!is_option) {
-            // Then it is a file
-            input_files.push_back(arg);
+    std::vector<std::string> input_files;
+    for (const auto& file : std::filesystem::recursive_directory_iterator(sources_folder)) {
+        if (file.is_regular_file() && file.path().extension() == ".cpp") {
+            input_files.push_back(file.path());
         }
     }
 
@@ -136,9 +140,11 @@ int main(int argc, char* argv[]) {
                     auto cmd = make_cmd(compiler_path, version, path, true);
                     int status = system(cmd.c_str());
                     if (status == 0) {
+                        std::unique_lock lock(cout_mutex);
                         std::cout << "Warning: " << path << " compiles with lower cpp version " << two_digits(version) << '\n';
                         warnings++;
                     } else {
+                        std::unique_lock lock(cout_mutex);
                         std::cout << "OK: " << path << ' ' << two_digits(version) << '\n';
                     }
                 });
@@ -147,15 +153,18 @@ int main(int argc, char* argv[]) {
                     auto cmd = make_cmd(compiler_path, version, path, false);
                     int status = system(cmd.c_str());
                     if (status != 0) {
+                        std::unique_lock lock(cout_mutex);
                         std::cout << "Error: " << path << " does not compile with cpp version " << two_digits(version) << '\n';
                         errors++;
                     } else {
                         auto cmd = "./" + exe_name(path, version) + " >/dev/null";
                         int status = system(cmd.c_str());
                         if (status != 0) {
+                            std::unique_lock lock(cout_mutex);
                             std::cout << "Error: " << path << " failed test with cpp version " << two_digits(version) << '\n';
                             errors++;
                         } else {
+                            std::unique_lock lock(cout_mutex);
                             std::cout << "OK: " << path << ' ' << two_digits(version) << '\n';
                         }
                     }
