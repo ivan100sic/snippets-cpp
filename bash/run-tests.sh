@@ -1,3 +1,4 @@
+# This is outdated, do not use.
 read -p "Threads: " THR
 read -p "Compiler path: " CXX
 ROOT=`git rev-parse --show-toplevel`
