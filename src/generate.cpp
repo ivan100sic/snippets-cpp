@@ -72,6 +72,16 @@ std::string replace_all(std::string str,
     }
 }
 
+std::string datetime() {
+    char result[64];
+    time_t now;
+    time(&now);
+    tm ts = *gmtime(&now);
+
+    auto bytes = strftime(result, 48, "%Y-%m-%d %H:%M:%S", &ts);
+    return std::string(result, bytes);
+}
+
 using Replacements = std::map<std::string_view, std::string_view>;
 
 class Snippet {
@@ -427,8 +437,8 @@ int main(int argc, char* argv[]) {
         {&target, "--target="},
         {&tab_width, "--tab-width="},
         {&cpp_standard, "--cpp-standard="},
-        {&sources_folder, "--sources_folder="},
-        {&version_tag, "--version_tag="},
+        {&sources_folder, "--sources-folder="},
+        {&version_tag, "--version-tag="},
     };
 
     // Parse command line options
@@ -453,10 +463,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    auto datetime_now = datetime();
+
     std::vector<Snippet> snippets;
     for (const auto& file : input_files) {
         snippets.push_back(Snippet::from_file(file, {
             {SnippetReleaseVersion, version_tag},
+            {SnippetReleaseDate, datetime_now},
         }));
     }
 
