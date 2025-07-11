@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     std::pair<std::string*, std::string> supported_options[] = {
         {&compiler_path, "--compiler-path="},
         {&threads, "--threads="},
-        {&sources_folder, "--sources_folder="},
+        {&sources_folder, "--sources-folder="},
     };
 
     // Parse command line options
