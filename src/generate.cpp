@@ -5,11 +5,14 @@
 #include <deque>
 #include <map>
 #include <filesystem>
+#include <string_view>
 
 #include "split.h"
 
 const std::string SnippetBegin = "/*snippet-begin*/";
 const std::string SnippetEnd = "/*snippet-end*/";
+const std::string SnippetReleaseVersion = "/*snippet-release-version*/";
+const std::string SnippetReleaseDate = "/*snippet-release-date*/";
 const std::string SnippetArg = "SNIPPET_ARG";
 const std::string DefaultTarget = "vscode";
 const int DefaultTabWidth = 4;
@@ -54,6 +57,32 @@ std::string trim(const std::string& str) {
 
     return str.substr(first, last - first + 1);
 }
+
+std::string replace_all(std::string str,
+                        std::string_view pattern,
+                        std::string_view new_val) {
+    size_t start = 0;
+    while (1) {
+        start = str.find(pattern, start);
+        if (start == str.npos) {
+            return str;
+        }
+        str.replace(start, pattern.size(), new_val);
+        start += new_val.size();
+    }
+}
+
+std::string datetime() {
+    char result[64];
+    time_t now;
+    time(&now);
+    tm ts = *gmtime(&now);
+
+    auto bytes = strftime(result, 48, "%Y-%m-%d %H:%M:%S", &ts);
+    return std::string(result, bytes);
+}
+
+using Replacements = std::map<std::string_view, std::string_view>;
 
 class Snippet {
 public:
@@ -100,7 +129,7 @@ public:
     std::vector<Element>& elements() { return m_elements; }
     const std::vector<Element>& elements() const { return m_elements; }
 
-    static Snippet from_file(const std::string& path) {
+    static Snippet from_file(const std::string& path, const Replacements& replacements = {}) {
         Snippet result;
         auto data = read_file(path);
         auto filename = split(path, PathSeparator).back();
@@ -143,6 +172,11 @@ public:
         }
 
         data = data.substr(pos_first, pos_last - pos_first);
+
+        // Replacements
+        for (const auto& [pattern, new_val] : replacements) {
+            data = replace_all(move(data), pattern, new_val);
+        }
 
         // Parse the snippet
         size_t parsed = 0;
@@ -396,13 +430,15 @@ int main(int argc, char* argv[]) {
     std::string tab_width = std::to_string(DefaultTabWidth);
     std::string cpp_standard = std::to_string(DefaultCppStandard);
     std::string sources_folder;
+    std::string version_tag = "unknown";
 
     std::vector<std::string> input_files;
     std::pair<std::string*, std::string> supported_options[] = {
         {&target, "--target="},
         {&tab_width, "--tab-width="},
         {&cpp_standard, "--cpp-standard="},
-        {&sources_folder, "--sources_folder="},
+        {&sources_folder, "--sources-folder="},
+        {&version_tag, "--version-tag="},
     };
 
     // Parse command line options
@@ -427,9 +463,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    auto datetime_now = datetime();
+
     std::vector<Snippet> snippets;
     for (const auto& file : input_files) {
-        snippets.push_back(Snippet::from_file(file));
+        snippets.push_back(Snippet::from_file(file, {
+            {SnippetReleaseVersion, version_tag},
+            {SnippetReleaseDate, datetime_now},
+        }));
     }
 
     for (auto& snip : snippets) {
