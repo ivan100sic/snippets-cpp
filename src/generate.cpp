@@ -410,7 +410,7 @@ void filter_snippets(std::vector<Snippet>& snips, const std::string& cpp_standar
     snips.clear();
 
     for (auto& [shortcut, group] : groups) {
-        sort(group.begin(), group.end(), [&](auto& u, auto& v) {
+        std::sort(group.begin(), group.end(), [&](auto& u, auto& v) {
             return u.standard() < v.standard();
         });
 
