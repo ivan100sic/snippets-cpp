@@ -6,6 +6,7 @@
 #include <map>
 #include <filesystem>
 #include <string_view>
+#include <algorithm>
 
 #include "split.h"
 
