@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
     for (auto& path : input_files) {
         auto filename = split(path, '/').back();
         int file_cpp_ver = stoi(split(filename, '.')[1]);
-        for (int version : {3, 11, 14, 17, 20}) {
+        for (int version : {3, 11, 14, 17, 20, 23}) {
             if (version < file_cpp_ver) {
                 executor.push([version, compiler_path, path, &warnings]() {
                     auto cmd = make_cmd(compiler_path, version, path, true);

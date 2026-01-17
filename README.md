@@ -30,11 +30,11 @@ For example, you can define a snippet for the begin/end iterator pair like this:
 
 ## Test utility
 
-Use the Test utility to ensure your snippets are correct, and compile using the target language version. It will compile every snippet using every language version from the set (3, 11, 14, 17, 20). If the language version exceeds the snippet language version, the snippet is expected to compile, otherwise, the snippet is expected to fail compilation - in that case, a warning will be raised. After successful
+Use the Test utility to ensure your snippets are correct, and compile using the target language version. It will compile every snippet using every language version from the set (3, 11, 14, 17, 20, 23). If the language version exceeds the snippet language version, the snippet is expected to compile, otherwise, the snippet is expected to fail compilation - in that case, a warning will be raised. After successful
 compilation, the snippet is run and its exit code is checked. If it's nonzero, the run failed and an error will be raised. 
 
 ### Example usage
-`./test --compiler-path=/usr/bin/g++-11 --threads=8 snippets/*.cpp`
+`./test --compiler-path=/usr/bin/g++-14 --threads=8 snippets/*.cpp`
 
 ### Options
 + `--compiler-path=path` sets the C++ compiler to use. Currently only newer versions of GCC are guaranteed to work.
